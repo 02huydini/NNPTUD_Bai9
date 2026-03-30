@@ -69,7 +69,6 @@ exports.getLastMessagePerUser = async (req, res) => {
     const currentUserId = new mongoose.Types.ObjectId(req.user.id);
 
     const results = await Message.aggregate([
-      // Bước 1: Lọc chỉ những message liên quan đến user hiện tại
       {
         $match: {
           $or: [{ from: currentUserId }, { to: currentUserId }]
@@ -124,6 +123,23 @@ exports.getLastMessagePerUser = async (req, res) => {
     ]);
 
     return res.json({ success: true, data: results });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+};
+exports.deleteMyMessages = async (req, res) => {
+  try {
+    const currentUserId = req.user.id;
+    const result = await Message.deleteMany({
+      $or: [
+        { from: currentUserId },
+        { to: currentUserId }
+      ]
+    });
+    return res.json({
+      success: true,
+      message: `Đã xoá ${result.deletedCount} tin nhắn`
+    });
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message });
   }
